@@ -1,0 +1,15 @@
+# BESnet Requirements
+# Python 3.8 or higher required
+
+# Core dependencies
+torch>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+h5py>=3.8.0
+
+# Optional for GPU support (recommended)
+# torch-cuda  # Uncomment if you have CUDA-capable GPU
+
+# Installation:
+# pip install -r requirements.txt
