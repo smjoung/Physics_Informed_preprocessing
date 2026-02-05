@@ -1,11 +1,6 @@
-# BES-ELMnet: Edge Localized Mode Onset Prediction
+# Prediction
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
-
-**Convolutional neural network for predicting Edge Localized Mode (ELM) onsets in tokamak plasmas using Beam Emission Spectroscopy (BES) data.**
-
-Based on the methodology from:
-> Joung, S., Smith, D.R., McKee, G., et al. (2024). Tokamak edge localized mode onset prediction with deep neural network and pedestal turbulence. *Nuclear Fusion*, 64(6), 066038. https://doi.org/10.1088/1741-4326/ad43fb
+**Physics-consistent input adaptation for Convolutional neural network**
 
 ---
 
@@ -13,8 +8,8 @@ Based on the methodology from:
 
 This distribution contains:
 
-1. **`bes_elmnet_inference.py`** - Python script for running ELM predictions
-2. **`bes_data_4x16_v2.h5`** - HDF5 file with plasma geometry and BES signals
+1. **`bes_nn_inference.py`** - Python script for running predictions
+2. **`bes_data_4x16_v2.h5`** - HDF5 file with plasma geometry and signals
 3. **`pre_modelV2.pt`** - Pre-trained PyTorch CNN model
 4. **`README.md`** - This file
 
@@ -39,10 +34,10 @@ pip install torch numpy scipy matplotlib h5py
 ### Running the Code
 
 ```bash
-python bes_elmnet_inference.py
+python bes_nn_inference.py
 ```
 
-**Output:** `bes_elmnet_predictions.png` - Comprehensive visualization with 9 analysis panels
+**Output:** `nn_predictions.png` - Comprehensive visualization with 9 analysis panels
 
 ---
 
@@ -53,8 +48,8 @@ python bes_elmnet_inference.py
 ```
 1. Load HDF5 Data
    └─ Plasma boundary (LCFS)
-   └─ 4×16 BES channel positions (64 total)
-   └─ BES signal data
+   └─ 4×16 channel positions (64 total)
+   └─ Signal data
 
 2. Select 4×8 Channels
    └─ Calculate from boundary location
@@ -71,12 +66,11 @@ python bes_elmnet_inference.py
    └─ 32 µs stride
 
 5. Load Pre-trained Model
-   └─ BES-ELMnet CNN architecture
-   └─ Trained on DIII-D data
+   └─ CNN architecture
 
 6. Run Predictions
-   └─ ELM onset probabilities [0, 1]
-   └─ Threshold: 0.601
+   └─ Onset probabilities [0, 1]
+   └─ Threshold: 0.6
 
 7. Visualize Results
    └─ Comprehensive 9-panel figure
@@ -104,7 +98,7 @@ bes_data_4x16_v2.h5
     └── elm_positions (3,)          # ELM occurrence times
 ```
 
-### BES Configuration
+### Channel Configuration
 
 - **Total channels:** 64 (4 poloidal × 16 radial)
 - **Selected channels:** 32 (4 poloidal × 8 radial)
@@ -116,7 +110,7 @@ bes_data_4x16_v2.h5
 
 ## 🧠 CNN Architecture
 
-**BES-ELMnet** follows the paper architecture:
+**BESNN** follows the paper architecture:
 
 ```
 Input: 8 × 8 × 128 (spatial × temporal)
@@ -138,15 +132,15 @@ Input: 8 × 8 × 128 (spatial × temporal)
 
 ## 📈 Output Visualization
 
-The script generates `bes_elmnet_predictions.png` with 9 panels:
+The script generates `bes_nn_predictions.png` with 9 panels:
 
-1. **BES Channel Selection** - All 4×16 channels with selected 4×8 highlighted
+1. **Channel Selection** - All 4×16 channels with selected 4×8 highlighted
 2. **Zoomed View** - Detailed view of selected channels vs plasma boundary
-3. **4×8 Signal Heatmap** - Selected BES signals over time
+3. **4×8 Signal Heatmap** - Selected signals over time
 4. **Interpolation Demo** - Shows 4→8 interpolation for one radial column
 5. **8×8 Signal Heatmap** - Interpolated signals ready for CNN
 6. **Signal Comparison** - Original vs interpolated time series
-7. **CNN Predictions** - ELM onset probabilities with threshold
+7. **CNN Predictions** - Onset probabilities with threshold
 8. **Statistics** - Execution summary and detection metrics
 9. **Workflow** - Step-by-step processing diagram
 
@@ -188,32 +182,17 @@ Z₃ ○○○○○○○○          Z₆ ○○○○○○○○
 
 This provides the 8×8 spatial grid required by the CNN.
 
-### 3. Real-time Capable
-
-- **Window size:** 128 µs (very short)
-- **Stride:** 32 µs (high temporal resolution)
-- **Prediction:** Can forecast ELMs 2-5 ms in advance
-- **FPGA-ready:** Architecture designed for hardware acceleration
-
 ---
 
 ## 📝 Customization
 
 ### Change Input Files
 
-Edit lines 21-22 in `bes_elmnet_inference.py`:
+Edit lines 21-22 in `bes_nn_inference.py`:
 
 ```python
 HDF5_FILE = 'your_data.h5'
 MODEL_FILE = 'your_model.pt'
-```
-
-### Adjust Prediction Threshold
-
-Edit line 26:
-
-```python
-PREDICTION_THRESHOLD = 0.601  # Adjust between 0.5 and 0.7
 ```
 
 ### Change Window Parameters
@@ -224,68 +203,6 @@ Edit lines 24-25:
 WINDOW_SIZE = 128  # microseconds
 STRIDE = 32        # microseconds
 ```
-
----
-
-## 🔬 Scientific Background
-
-### Edge Localized Modes (ELMs)
-
-ELMs are quasi-periodic instabilities in high-confinement mode (H-mode) tokamak plasmas that:
-- Eject significant plasma energy (~20%) in ~100 µs
-- Can damage plasma-facing components
-- Are triggered by pressure gradient exceeding stability threshold
-- Show precursor signatures in pedestal turbulence
-
-### Why This Matters
-
-Predicting ELMs enables:
-- **Proactive control:** Apply mitigation (RMP coils) before onset
-- **Reactor protection:** Prevent damage to first wall
-- **Operational efficiency:** Maintain H-mode without disruptions
-
-### BES System
-
-Beam Emission Spectroscopy measures density fluctuations by observing:
-- Neutral beam injection + background plasma → excited atoms
-- Doppler-shifted Hα emission (656.1 nm)
-- 2D spatial array (4×16 channels)
-- High temporal resolution (1 MHz)
-- Localized measurement in pedestal region
-
----
-
-## 📚 Citation
-
-If you use this code or data, please cite:
-
-```bibtex
-@article{joung2024tokamak,
-  title={Tokamak edge localized mode onset prediction with deep neural network and pedestal turbulence},
-  author={Joung, Semin and Smith, David R and McKee, G and Yan, Z and Gill, K and Zimmerman, J and Geiger, B and Coffee, R and O'Shea, FH and Jalalvand, A and Kolemen, E},
-  journal={Nuclear Fusion},
-  volume={64},
-  number={6},
-  pages={066038},
-  year={2024},
-  publisher={IOP Publishing}
-}
-```
-
-**And this dataset:**
-
-```bibtex
-@dataset{[YOUR_DATASET_INFO],
-  author       = {[Your Name]},
-  title        = {BES-ELMnet: Pre-trained Model and Dataset},
-  month        = [Month],
-  year         = [Year],
-  publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.XXXXXXX},
-  url          = {https://doi.org/10.5281/zenodo.XXXXXXX}
-}
-```
-
 ---
 
 ## 🤝 Contributing
@@ -293,7 +210,6 @@ If you use this code or data, please cite:
 This is a reference implementation for the published methodology. For questions or issues:
 
 - **Paper:** https://doi.org/10.1088/1741-4326/ad43fb
-- **Contact:** [Your contact information]
 
 ---
 
@@ -301,49 +217,13 @@ This is a reference implementation for the published methodology. For questions 
 
 [Specify your license - e.g., MIT, CC BY 4.0, etc.]
 
-**Data source:** DIII-D tokamak operated by General Atomics
-
 ---
-
-## 🙏 Acknowledgments
-
-- DIII-D Team at General Atomics
-- University of Wisconsin-Madison
-- SLAC National Accelerator Laboratory
-- Princeton University
-- U.S. Department of Energy, Office of Science
-
-This work was supported by the U.S. Department of Energy under Awards DE-FC02-04ER54698, DE-SC0021157, DE-SC0001288, and DE-FG02-08ER54999.
-
----
-
 ## 📋 Version History
 
 - **v1.0** (2024) - Initial release
-  - Pre-trained model on DIII-D data
+  - Pre-trained model
   - 4×16 BES configuration
   - Boundary-based channel selection
   - Linear poloidal interpolation
 
 ---
-
-## ⚠️ Disclaimer
-
-This is research code and data distributed for scientific reproducibility. For production use in tokamak operations:
-- Validate thoroughly on your specific tokamak
-- Implement real-time processing (FPGA/GPU)
-- Integrate with control systems appropriately
-- Test extensively in simulation before deployment
-
----
-
-## 🔗 Related Resources
-
-- **DIII-D:** https://www.ga.com/magnetic-fusion/diii-d
-- **Nuclear Fusion Journal:** https://iopscience.iop.org/journal/0029-5515
-- **PyTorch:** https://pytorch.org/
-- **HDF5:** https://www.hdfgroup.org/
-
----
-
-**For support or questions, please open an issue or contact the authors.**
