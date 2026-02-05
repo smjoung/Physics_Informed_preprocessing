@@ -220,7 +220,7 @@ This is a reference implementation for the published methodology. For questions 
 ---
 ## 📋 Version History
 
-- **v1.0** (2024) - Initial release
+- **v1.0** (2025) - Initial release
   - Pre-trained model
   - 4×16 BES configuration
   - Boundary-based channel selection
